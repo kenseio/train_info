@@ -1,0 +1,8 @@
+# git管理しないファイル
+secret.json
+info.json
+
+# システム生成ファイル
+__pycache__
+.DS_Store
+.idea/
