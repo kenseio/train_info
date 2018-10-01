@@ -4,12 +4,16 @@ from bs4 import BeautifulSoup
 import re
 import json
 
-# 調べる路線をリストで指定
-targets = ['横須賀線', '南武線', '山手線']
-
 # 作業ディレクトリを取得
 path = os.path.dirname(os.path.abspath(__file__))
 print(path)
+
+# 調べる路線をリストで指定（別ファイルで指定）
+with open(path + '/target.conf') as f:
+    data = f.read()
+
+targets = [x.strip() for x in data.split(',')]
+# print(targets)
 
 # JRの運行情報ページへアクセス
 r = requests.get('http://traininfo.jreast.co.jp/train_info/kanto.aspx')

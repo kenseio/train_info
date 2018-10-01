@@ -1,6 +1,7 @@
 # git管理しないファイル
 secret.json
 info.json
+target.conf
 
 # システム生成ファイル
 __pycache__
