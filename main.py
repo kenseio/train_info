@@ -1,11 +1,14 @@
+import os
 import requests
 from bs4 import BeautifulSoup
+import re
 import json
 
-# TODO:better way to reference path
-path = '/home/pi/train_info/'
+# 作業ディレクトリを取得
+path = os.path.dirname(os.path.abspath(__file__))
+print(path)
 
-# TODO:リクエストエラーのときの処理を考える
+# JRの運行情報ページへアクセス
 r = requests.get('http://traininfo.jreast.co.jp/train_info/kanto.aspx')
 soup = BeautifulSoup(r.text, 'html.parser')
 
@@ -14,57 +17,58 @@ soup = BeautifulSoup(r.text, 'html.parser')
 train = soup.find_all('th', class_='text-tit-xlarge')[2]
 train_name = train.text
 # print(train_name)
-train_situation = train.find_next_sibling('td', class_='acess_i').find('img').attrs['alt']
-# print(train_situation)
+situation = train.find_next_sibling('td', class_='acess_i').find('img').attrs['alt']
+# print(situation)
 
 train_dict = {}
-train_dict['tarin_name'] = train_name
-train_dict['train_situation'] = train_situation
+train_dict['train_name'] = train_name
+train_dict['situation'] = situation
 
-# 平常運転の場合はこの下はスキップする
-if train_situation != '平常運転':
-    # TODO:クラス名は正規表現で取得する。time or time02
-    try:
-        delivery_time = train.parent.find('td', class_='time').text
-    except:
-        try:
-            delivery_time = train.parent.find('td', class_='time02').text
-        except:
-            delivery_time = ""
-
+# 平常運転の場合は、配信時刻と理由は取得しない
+if situation != '平常運転':
+    # 配信時刻のクラス名は正規表現で取得する。time or time02
+    delivery_time = train.parent.find('td', class_=re.compile('^time*')).text
     # print(delivery_time)
     cause = train.parent.find_next_sibling('tr').find('td').text
     # print(cause)
-    train_dict['delivery_time'] = delivery_time
-    train_dict['couse'] = cause
+else:
+    delivery_time = ''
+    cause = ''
 
-with open(path + 'info.json') as f:
+train_dict['delivery_time'] = delivery_time
+train_dict['cause'] = cause
+
+with open(path + '/info.json') as f:
     data = json.load(f)
 
-before = data['train_situation']
-# print(before)
-print(str(before) == str(train_situation))
-
+bef_situation = data['situation']
+bef_cause = data['cause']
 
 # GET前と後で値が変わってたらファイル更新＆LINEに通知
-if train_situation != before:
-    print('execute notifire')
-    with open(path + 'info.json', 'w') as f:
+decision = (bef_situation + bef_cause != situation + cause)
+print(decision)
+
+if decision:
+    print('execute notifier')
+    with open(path + '/info.json', 'w') as f:
         json.dump(train_dict, f)
 
     # LINEに通知
-    with open(path + 'secret.json') as f:
+    with open(path + '/secret.json') as f:
         data = json.load(f)
 
     token = data['line_token']
     url = 'https://notify-api.line.me/api/notify'
     header = {'Authorization': 'Bearer ' + token}
-    if train_situation == '平常運転':
-        option = {'message': '\n' + train_name + '：' + train_situation,
+    if situation == '平常運転':
+        option = {'message': '\n' + train_name + '：' + situation,
                   'stickerPackageId': 2, 'stickerId': 502}
-    else:
-        option = {'message': '\n' + train_name + '：' + train_situation + '\n' + cause,
+    elif situation == '運転見合わせ':
+        option = {'message': '\n' + train_name + '：' + situation + '\n' + cause + '\n' + delivery_time,
                   'stickerPackageId': 2, 'stickerId': 142}
+    else:
+        option = {'message': '\n' + train_name + '：' + situation + '\n' + cause + '\n' + delivery_time,
+                  'stickerPackageId': 2, 'stickerId': 18}
 
     response = requests.post(url, data=option, headers=header)
     print(response.text)
