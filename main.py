@@ -59,10 +59,13 @@ for train_index in train_indexes:
     with open(path + '/info.json') as f:
         data = json.load(f)
 
-    bef_situation = data[train_name]['situation']
-    bef_cause = data[train_name]['cause']
-    # bef_situation = ''
-    # bef_cause = ''
+    # targetを追加したときに前回情報が無いのでエラーにならないようにブランクをセットする
+    try:
+        bef_situation = data[train_name]['situation']
+        bef_cause = data[train_name]['cause']
+    except:
+        bef_situation = ''
+        bef_cause = ''
 
     # GET前と後で値が変わってたらファイル更新＆LINEに通知
     decision = (bef_situation + bef_cause != situation + cause)
