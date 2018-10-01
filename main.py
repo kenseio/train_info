@@ -15,10 +15,13 @@ with open(path + '/target.conf') as f:
 targets = [x.strip() for x in data.split(',')]
 # print(targets)
 
+# 前回処理したときの情報を読み込む
+with open(path + '/info.json') as f:
+    bef_data = json.load(f)
+
 # JRの運行情報ページへアクセス
 r = requests.get('http://traininfo.jreast.co.jp/train_info/kanto.aspx')
 soup = BeautifulSoup(r.text, 'html.parser')
-
 
 # 最初に設定した路線のインデックス(表の何番目に出てくるか)を調べてリストに格納
 trains = soup.find_all('th', class_='text-tit-xlarge')
@@ -32,9 +35,8 @@ for train in trains:
     i += 1
 print(train_indexes)
 
-train_dict ={}
-
 # 取得するインデックス分ループする
+train_dict ={}
 for train_index in train_indexes:
     train = trains[train_index]
     train_name = train.text
@@ -60,13 +62,10 @@ for train_index in train_indexes:
     train_dict[train_name]['delivery_time'] = delivery_time
     train_dict[train_name]['cause'] = cause
 
-    with open(path + '/info.json') as f:
-        data = json.load(f)
-
     # targetを追加したときに前回情報が無いのでエラーにならないようにブランクをセットする
     try:
-        bef_situation = data[train_name]['situation']
-        bef_cause = data[train_name]['cause']
+        bef_situation = bef_data[train_name]['situation']
+        bef_cause = bef_data[train_name]['cause']
     except:
         bef_situation = ''
         bef_cause = ''
