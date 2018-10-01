@@ -2,6 +2,9 @@ import requests
 from bs4 import BeautifulSoup
 import json
 
+# TODO:better way to reference path
+path = '/home/pi/train_info/'
+
 # TODO:リクエストエラーのときの処理を考える
 r = requests.get('http://traininfo.jreast.co.jp/train_info/kanto.aspx')
 soup = BeautifulSoup(r.text, 'html.parser')
@@ -35,7 +38,7 @@ if train_situation != '平常運転':
     train_dict['delivery_time'] = delivery_time
     train_dict['couse'] = cause
 
-with open('info.json') as f:
+with open(path + 'info.json') as f:
     data = json.load(f)
 
 before = data['train_situation']
@@ -46,11 +49,11 @@ print(str(before) == str(train_situation))
 # GET前と後で値が変わってたらファイル更新＆LINEに通知
 if train_situation != before:
     print('execute notifire')
-    with open('info.json', 'w') as f:
+    with open(path + 'info.json', 'w') as f:
         json.dump(train_dict, f)
 
     # LINEに通知
-    with open('secret.json') as f:
+    with open(path + 'secret.json') as f:
         data = json.load(f)
 
     token = data['line_token']
