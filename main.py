@@ -32,7 +32,7 @@ train_dict ={}
 
 # 取得するインデックス分ループする
 for train_index in train_indexes:
-    train = soup.find_all('th', class_='text-tit-xlarge')[train_index]
+    train = trains[train_index]
     train_name = train.text
     # print(train_name)
     situation = train.find_next_sibling('td', class_='acess_i').find('img').attrs['alt']
