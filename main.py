@@ -1,8 +1,9 @@
 import os
+import json
+from datetime import datetime
+import re
 import requests
 from bs4 import BeautifulSoup
-import re
-import json
 
 # 作業ディレクトリを取得
 path = os.path.dirname(os.path.abspath(__file__))
@@ -37,6 +38,7 @@ print(train_indexes)
 
 # 取得するインデックス分ループする
 train_dict ={}
+train_dict['execution_time'] = datetime.now().strftime("%Y/%m/%d %H:%M:%S")
 for train_index in train_indexes:
     train = trains[train_index]
     train_name = train.text
@@ -76,8 +78,6 @@ for train_index in train_indexes:
 
     if decision:
         print('execute notifier')
-        with open(path + '/info.json', 'w') as f:
-            json.dump(train_dict, f)
 
         # LINEに通知
         with open(path + '/secret.json') as f:
@@ -98,3 +98,7 @@ for train_index in train_indexes:
 
         response = requests.post(url, data=option, headers=header)
         print(response.text)
+
+# 今回の情報をファイルに書き出し
+with open(path + '/info.json', 'w') as f:
+    json.dump(train_dict, f)
