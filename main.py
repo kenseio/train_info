@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import os
 import json
 from datetime import datetime
@@ -5,20 +7,24 @@ import re
 import requests
 from bs4 import BeautifulSoup
 
+
 # 作業ディレクトリを取得
 path = os.path.dirname(os.path.abspath(__file__))
 print(path)
 
 # 調べる路線をリストで指定（別ファイルで指定）
-with open(path + '/target.conf') as f:
-    data = f.read()
+f = open(path + '/target.conf', 'r', encoding='utf-8')
+data = f.read()
 
 targets = [x.strip() for x in data.split(',')]
 # print(targets)
 
 # 前回処理したときの情報を読み込む
-with open(path + '/info.json') as f:
-    bef_data = json.load(f)
+try:
+    with open(path + '/info.json') as f:
+        bef_data = json.load(f)
+except:
+    bef_data = {}
 
 # JRの運行情報ページへアクセス
 r = requests.get('http://traininfo.jreast.co.jp/train_info/kanto.aspx')
