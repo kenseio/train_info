@@ -31,7 +31,12 @@ r = requests.get('http://traininfo.jreast.co.jp/train_info/kanto.aspx')
 soup = BeautifulSoup(r.text, 'html.parser')
 
 # 最初に設定した路線のインデックス(表の何番目に出てくるか)を調べてリストに格納
-trains = soup.find_all('th', class_='text-tit-xlarge')
+train_ths = soup.find_all('th', class_='line')
+print(len(train_ths))
+
+trains = []
+for train_th in train_ths:
+    trains.append(train_th.find('p', class_='line_name'))
 
 train_indexes = []
 i = 0
@@ -49,7 +54,7 @@ for train_index in train_indexes:
     train = trains[train_index]
     train_name = train.text
     # print(train_name)
-    situation = train.find_next_sibling('td', class_='acess_i').find('img').attrs['alt']
+    situation = train.parent.find_next_sibling('td', class_='line_status').find('img').attrs['alt']
     # print(situation)
 
     train_dict[train_name] = {}
