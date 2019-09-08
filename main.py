@@ -61,18 +61,13 @@ for train_index in train_indexes:
     train_dict[train_name]['train_name'] = train_name
     train_dict[train_name]['situation'] = situation
 
-    # 平常運転の場合は、配信時刻と理由は取得しない
-    if situation != '平常運転':
-        # 配信時刻のクラス名は正規表現で取得する。time or time02
-        delivery_time = train.parent.find('td', class_=re.compile('^time*')).text
-        # print(delivery_time)
-        cause = train.parent.find_next_sibling('tr').find('td').text
+    # 遅延理由は無い場合もあるので、try&except
+    try:
+        cause = train.parent.find_next_sibling('td', class_='line_status').find('p', class_='status_text').text
         # print(cause)
-    else:
-        delivery_time = ''
+    except:
         cause = ''
 
-    train_dict[train_name]['delivery_time'] = delivery_time
     train_dict[train_name]['cause'] = cause
 
     # targetを追加したときに前回情報が無いのでエラーにならないようにブランクをセットする
@@ -101,10 +96,10 @@ for train_index in train_indexes:
             option = {'message': '\n' + train_name + '：' + situation,
                       'stickerPackageId': 2, 'stickerId': 502}
         elif situation == '運転見合わせ':
-            option = {'message': '\n' + train_name + '：' + situation + '\n' + cause + '\n' + delivery_time,
+            option = {'message': '\n' + train_name + '：' + situation + '\n' + cause,
                       'stickerPackageId': 2, 'stickerId': 142}
         else:
-            option = {'message': '\n' + train_name + '：' + situation + '\n' + cause + '\n' + delivery_time,
+            option = {'message': '\n' + train_name + '：' + situation + '\n' + cause,
                       'stickerPackageId': 2, 'stickerId': 18}
 
         response = requests.post(url, data=option, headers=header)
